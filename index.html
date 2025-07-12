@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spelling Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', Helvetica, sans-serif;
             background-color: #f0f0f0;
             margin: 0;
             padding: 10px;
@@ -27,14 +28,13 @@
             overflow: hidden;
         }
         input[type="text"] {
-           
-
- padding: 10px;
+            padding: 10px;
             font-size: clamp(14px, 4vw, 16px);
             width: 100%;
             max-width: 400px;
             margin: 10px 0;
             box-sizing: border-box;
+            font-family: 'Roboto', Helvetica, sans-serif;
         }
         button {
             padding: 10px 20px;
@@ -46,6 +46,7 @@
             border: none;
             border-radius: 5px;
             touch-action: manipulation;
+            font-family: 'Roboto', Helvetica, sans-serif;
         }
         button:hover {
             background-color: #45a049;
@@ -55,11 +56,14 @@
             font-style: italic;
             margin-top: 10px;
             font-size: clamp(12px, 3.5vw, 14px);
+            user-select: none;
+            font-family: 'Roboto', Helvetica, sans-serif;
         }
         #completion {
             font-size: clamp(14px, 4vw, 18px);
             font-weight: bold;
             margin-top: 10px;
+            font-family: 'Roboto', Helvetica, sans-serif;
         }
         .particle {
             position: absolute;
@@ -120,6 +124,7 @@
         let completedCount = 0;
         let isPlaying = false;
         let autoPlayInterval;
+        let wrongAttempts = 0;
 
         function createFirework() {
             let input = document.getElementById('userInput');
@@ -184,6 +189,7 @@
                 for (let i = 0; i < 5; i++) {
                     setTimeout(createFirework, i * 200);
                 }
+                wrongAttempts = 0;
                 setTimeout(() => {
                     document.getElementById('userInput').value = '';
                     document.getElementById('hint').textContent = '';
@@ -192,15 +198,34 @@
                     completedCount++;
                     document.getElementById('completion').textContent = `Completed: ${completedCount}/13`;
                     if (currentSentenceIndex >= sentences.length) {
-                        document.getElementById('game-container').innerHTML = '<h1>Congratulations! You have completed all sentences!</h1>';
+                        document.getElementById('game-container').innerHTML = `<h1>Congratulations! You have completed ${completedCount} sentences!</h1>`;
                     } else {
                         playSentence();
                         startAutoPlay();
                     }
                 }, 2000);
             } else {
-                result.textContent = "Incorrect, try again!";
+                wrongAttempts++;
+                result.textContent = `Incorrect, try again! (${3 - wrongAttempts} attempts left)`;
                 result.style.color = "red";
+                if (wrongAttempts >= 3) {
+                    stopAutoPlay();
+                    wrongAttempts = 0;
+                    result.textContent = "Moving to next sentence...";
+                    setTimeout(() => {
+                        document.getElementById('userInput').value = '';
+                        document.getElementById('hint').textContent = '';
+                        result.textContent = '';
+                        currentSentenceIndex++;
+                        document.getElementById('completion').textContent = `Completed: ${completedCount}/13`;
+                        if (currentSentenceIndex >= sentences.length) {
+                            document.getElementById('game-container').innerHTML = `<h1>Congratulations! You have completed ${completedCount} sentences!</h1>`;
+                        } else {
+                            playSentence();
+                            startAutoPlay();
+                        }
+                    }, 1000);
+                }
             }
         }
 
@@ -210,6 +235,7 @@
         }
 
         function startGame() {
+            wrongAttempts = 0;
             document.getElementById('game-container').innerHTML = `
                 <h1>Spelling Game</h1>
                 <p>Listen and type the sentence you hear:</p>
@@ -224,6 +250,7 @@
                 <p id="result"></p>
             `;
             document.getElementById('userInput').addEventListener('keypress', handleKeyPress);
+            document.getElementById('hint').addEventListener('copy', (e) => e.preventDefault());
             playSentence();
             startAutoPlay();
         }
@@ -232,6 +259,7 @@
             stopAutoPlay();
             currentSentenceIndex = 0;
             completedCount = 0;
+            wrongAttempts = 0;
             document.getElementById('game-container').innerHTML = `
                 <h1>Spelling Game</h1>
                 <p>Click Start to begin the game!</p>
